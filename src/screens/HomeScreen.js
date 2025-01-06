@@ -19,10 +19,6 @@ const HomeScreen = ({ navigation, user, onLogout }) => {
                 onPress={() => navigation.navigate('Profile')}
                 style={tw`bg-white/20 p-0.5 rounded-2xl`}
               >
-                {/* <Image
-                  source={require('../assets/images/default-avatar.png')}
-                  style={tw`w-12 h-12 rounded-xl`}
-                /> */}
               </TouchableOpacity>
               <View style={tw`ml-3`}>
                 <Text style={tw`text-white/80 text-sm font-medium`}>Welcome back</Text>

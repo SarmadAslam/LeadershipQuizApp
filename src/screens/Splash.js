@@ -14,8 +14,8 @@ const Splash = ({ navigation }) => {
         {/* Top Section with Logo and Title */}
         <View style={tw`items-center mb-8`}>
           <Image 
-            source={require("../../assets/images/splash.jpg")}
-            style={tw.style(`h-32 w-32 rounded-3xl shadow-lg`, { 
+            source={require("../../assets/images/b.png")}
+            style={tw.style(`h-50 w-50 rounded-3xl shadow-lg`, { 
               shadowColor: 'white',
             })}
           />
@@ -44,7 +44,7 @@ const Splash = ({ navigation }) => {
         </View>
 
         {/* Authentication Buttons */}
-        <View style={tw`mt-auto`}>
+        <View style={tw`mt-2`}>
           <View style={tw`flex-row gap-4 mb-4`}>
             <Pressable 
               onPress={() => navigation.navigate("Login")}

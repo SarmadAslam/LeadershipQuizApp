@@ -1,65 +1,99 @@
+import { View, Text, TextInput, Pressable, Alert, ActivityIndicator } from 'react-native';
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialIcons } from '@expo/vector-icons';
 import tw from 'twrnc';
+import { sendPasswordResetEmail } from 'firebase/auth';
+import { my_auth } from '../API/signup';
 
-const ForgotPassword = () => {
+const ForgotPassword = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const navigation = useNavigation();
 
   const isValidEmail = (email) => /\S+@\S+\.\S+/.test(email);
 
-  const handleResetPassword = () => {
+  const handleResetPassword = async () => {
     if (!email || !isValidEmail(email)) {
       Alert.alert('Error', 'Please enter a valid email address.');
       return;
     }
+
     setLoading(true);
-    setTimeout(() => {
+    try {
+      await sendPasswordResetEmail(my_auth, email);
+      Alert.alert(
+        'Reset Link Sent',
+        'If an account exists with this email, you will receive a password reset link.',
+        [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
+      );
+    } catch (error) {
+      Alert.alert('Error', 'Failed to send reset link. Please try again.');
+    } finally {
       setLoading(false);
-      Alert.alert('Success', 'If the email is registered, you will receive a reset link.');
-      navigation.navigate('Login');
-    }, 2000);
+    }
   };
 
   return (
-    <View style={tw`flex-1 justify-center items-center p-5`}>
-      <Text style={tw`text-3xl font-bold mb-2.5`}>
-        Forgot Password?
-      </Text>
-      
-      <Text style={tw`text-base text-gray-600 mb-5 text-center`}>
-        Enter your registered email to receive a password reset link.
-      </Text>
-      
-      <TextInput
-        style={tw`w-full p-3 mb-4 border border-gray-300 rounded-lg text-base`}
-        placeholder="Enter your email"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
-      />
-      
-      <TouchableOpacity
-        style={tw`w-full py-4 rounded-lg items-center ${loading ? 'bg-gray-400' : 'bg-[#2980b9]'}`}
-        onPress={handleResetPassword}
-        disabled={loading}
-      >
-        <Text style={tw`text-white text-base font-bold`}>
-          {loading ? 'Sending...' : 'Send Reset Link'}
-        </Text>
-      </TouchableOpacity>
-      
-      <TouchableOpacity 
-        onPress={() => navigation.goBack()} 
-        style={tw`mt-5`}
-      >
-        <Text style={tw`text-base text-[#2980b9]`}>
-          Back to Login
-        </Text>
-      </TouchableOpacity>
-    </View>
+    <LinearGradient
+      colors={['#1a365d', '#2563eb', '#3b82f6']}
+      style={tw`flex-1`}
+    >
+      <View style={tw`flex-1 px-6 pt-12 pb-8`}>
+        {/* Back Button */}
+        <Pressable 
+          onPress={() => navigation.goBack()}
+          style={tw`flex-row items-center mb-8`}
+        >
+          <MaterialIcons name="arrow-back" size={24} color="white" />
+          <Text style={tw`text-white ml-1`}>Back</Text>
+        </Pressable>
+
+        <View style={tw`flex-1 justify-center`}>
+          {/* Header */}
+          <View style={tw`items-center mb-8`}>
+            <MaterialIcons name="lock-reset" size={64} color="white" />
+            <Text style={tw`text-4xl font-bold text-white mb-2 mt-4`}>
+              Forgot Password?
+            </Text>
+            <Text style={tw`text-lg text-white/80 text-center`}>
+              Enter your email to receive a password reset link
+            </Text>
+          </View>
+
+          {/* Form */}
+          <View style={tw`bg-white/10 rounded-3xl p-6 mb-6`}>
+            <View style={tw`mb-6`}>
+              <View style={tw`flex-row items-center bg-white/20 rounded-xl px-4 mb-1`}>
+                <MaterialIcons name="email" size={20} color="white" />
+                <TextInput
+                  placeholder="Email"
+                  placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  style={tw`flex-1 p-4 text-white`}
+                />
+              </View>
+            </View>
+
+            <Pressable
+              onPress={handleResetPassword}
+              style={tw`bg-white rounded-xl p-4`}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#2563eb" />
+              ) : (
+                <Text style={tw`text-blue-600 text-lg text-center font-semibold`}>
+                  Send Reset Link
+                </Text>
+              )}
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    </LinearGradient>
   );
 };
 

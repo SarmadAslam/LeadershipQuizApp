@@ -11,6 +11,7 @@ import ResultsScreen from '../screens/ResultScreen';
 import LeadershipStylesInfo from '../screens/LeadershipStylesInfo.js';
 import ProfileSetting from '../screens/ProfileSetting.js';
 import Profile from '../screens/Profile.js';
+
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {

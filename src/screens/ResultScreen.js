@@ -1,11 +1,28 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import tw from 'twrnc';
 
-const ResultsScreen = ({ route }) => {
-  const navigation = useNavigation();
+const ResultsScreen = ({ route, navigation }) => {
   const { results } = route.params;
+  
+  const styleColors = {
+    Autocratic: '#e74c3c',
+    Democratic: '#2980b9',
+    'Laissez-Faire': '#27ae60'
+  };
+
+  const ProgressBar = ({ percentage, color }) => (
+    <View style={tw`h-2 bg-gray-200 rounded-full overflow-hidden`}>
+      <View 
+        style={[
+          tw`h-full rounded-full`,
+          { backgroundColor: color, width: `${percentage}%` }
+        ]}
+      />
+    </View>
+  );
 
   const leadershipStyles = {
     Autocratic: {
@@ -76,76 +93,127 @@ const ResultsScreen = ({ route }) => {
     }
   };
 
-  const currentStyle = leadershipStyles[results.dominantStyle];
-
   return (
-    <View style={tw`flex-1 bg-gray-50`}>
-      <ScrollView style={tw`flex-1 p-6`}>
-        <View style={tw`mb-8`}>
-          <Text style={tw`text-3xl font-bold text-[${currentStyle.color}] mb-2`}>
-            {results.dominantStyle} Leader
-          </Text>
-          <Text style={tw`text-gray-600 text-lg`}>
-            {currentStyle.description}
-          </Text>
-        </View>
+    <LinearGradient
+      colors={['#1a365d', '#2563eb', '#3b82f6']}
+      style={tw`flex-1`}
+    >
+      <ScrollView style={tw`flex-1`}>
+        <View style={tw`px-6 pt-12 pb-8`}>
+          {/* Back Button */}
+          <Pressable 
+            onPress={() => navigation.navigate('HomeScreen')}
+            style={tw`flex-row items-center mb-8`}
+          >
+            <MaterialIcons name="arrow-back" size={24} color="white" />
+            <Text style={tw`text-white ml-1`}>Back to Home</Text>
+          </Pressable>
 
-        <View style={tw`bg-white rounded-lg shadow-sm p-5 mb-6`}>
-          <Text style={tw`text-xl font-bold text-gray-800 mb-4`}>Your Leadership Profile</Text>
-          
-          <Text style={tw`text-base font-semibold text-gray-800 mb-2`}>Key Strengths:</Text>
-          {currentStyle.strengths.map((strength, index) => (
-            <Text key={index} style={tw`text-gray-600 mb-1`}>• {strength}</Text>
-          ))}
-
-          <Text style={tw`text-base font-semibold text-gray-800 mt-4 mb-2`}>Areas for Growth:</Text>
-          {currentStyle.weaknesses.map((weakness, index) => (
-            <Text key={index} style={tw`text-gray-600 mb-1`}>• {weakness}</Text>
-          ))}
-
-          <Text style={tw`text-base font-semibold text-gray-800 mt-4 mb-2`}>Development Tips:</Text>
-          {currentStyle.tips.map((tip, index) => (
-            <Text key={index} style={tw`text-gray-600 mb-1`}>• {tip}</Text>
-          ))}
-        </View>
-
-        <View style={tw`bg-white rounded-lg shadow-sm p-5 mb-6`}>
-          <Text style={tw`text-xl font-bold text-gray-800 mb-4`}>Style Breakdown</Text>
-          <View style={tw`flex-row justify-between items-center mb-2`}>
-            <Text style={tw`text-gray-600`}>Autocratic</Text>
-            <Text style={tw`text-gray-800 font-semibold`}>{Math.round(results.counts.A / 12 * 100)}%</Text>
+          {/* Results Header */}
+          <View style={tw`items-center mb-8`}>
+            <Text style={tw`text-4xl font-bold text-white mb-2`}>Your Results</Text>
+            <Text style={tw`text-lg text-white/80 text-center`}>
+              Understanding Your Leadership Style
+            </Text>
           </View>
-          <View style={tw`flex-row justify-between items-center mb-2`}>
-            <Text style={tw`text-gray-600`}>Democratic</Text>
-            <Text style={tw`text-gray-800 font-semibold`}>{Math.round(results.counts.B / 12 * 100)}%</Text>
+
+          {/* Dominant Style Card */}
+          <View style={tw`bg-white/10 rounded-3xl p-6 mb-6`}>
+            <Text style={[
+              tw`text-3xl font-bold mb-2`,
+              { color: styleColors[results.dominantStyle] }
+            ]}>
+              {results.dominantStyle} Leader
+            </Text>
+            <Text style={tw`text-white/80 text-lg mb-6`}>
+              {leadershipStyles[results.dominantStyle].description}
+            </Text>
+
+            {/* Style Breakdown */}
+            <Text style={tw`text-xl font-bold text-white mb-4`}>Style Breakdown</Text>
+            
+            <View style={tw`mb-4`}>
+              <View style={tw`flex-row justify-between items-center mb-2`}>
+                <Text style={tw`text-white`}>Autocratic</Text>
+                <Text style={tw`text-white font-bold`}>
+                  {Math.round(results.counts.A / 12 * 100)}%
+                </Text>
+              </View>
+              <ProgressBar 
+                percentage={Math.round(results.counts.A / 12 * 100)} 
+                color={styleColors.Autocratic}
+              />
+            </View>
+
+            <View style={tw`mb-4`}>
+              <View style={tw`flex-row justify-between items-center mb-2`}>
+                <Text style={tw`text-white`}>Democratic</Text>
+                <Text style={tw`text-white font-bold`}>
+                  {Math.round(results.counts.B / 12 * 100)}%
+                </Text>
+              </View>
+              <ProgressBar 
+                percentage={Math.round(results.counts.B / 12 * 100)} 
+                color={styleColors.Democratic}
+              />
+            </View>
+
+            <View style={tw`mb-4`}>
+              <View style={tw`flex-row justify-between items-center mb-2`}>
+                <Text style={tw`text-white`}>Laissez-Faire</Text>
+                <Text style={tw`text-white font-bold`}>
+                  {Math.round(results.counts.C / 12 * 100)}%
+                </Text>
+              </View>
+              <ProgressBar 
+                percentage={Math.round(results.counts.C / 12 * 100)} 
+                color={styleColors['Laissez-Faire']}
+              />
+            </View>
           </View>
-          <View style={tw`flex-row justify-between items-center`}>
-            <Text style={tw`text-gray-600`}>Laissez-Faire</Text>
-            <Text style={tw`text-gray-800 font-semibold`}>{Math.round(results.counts.C / 12 * 100)}%</Text>
+
+          {/* Strengths and Tips */}
+          <View style={tw`bg-white/10 rounded-3xl p-6 mb-6`}>
+            <Text style={tw`text-xl font-bold text-white mb-4`}>Key Strengths</Text>
+            {leadershipStyles[results.dominantStyle].strengths.map((strength, index) => (
+              <View key={index} style={tw`flex-row items-center mb-2`}>
+                <MaterialIcons name="check-circle" size={20} color="white" />
+                <Text style={tw`text-white ml-2`}>{strength}</Text>
+              </View>
+            ))}
+
+            <Text style={tw`text-xl font-bold text-white mt-6 mb-4`}>Development Tips</Text>
+            {leadershipStyles[results.dominantStyle].tips.map((tip, index) => (
+              <View key={index} style={tw`flex-row items-center mb-2`}>
+                <MaterialIcons name="lightbulb" size={20} color="white" />
+                <Text style={tw`text-white ml-2`}>{tip}</Text>
+              </View>
+            ))}
           </View>
         </View>
       </ScrollView>
 
+      {/* Action Buttons */}
       <View style={tw`p-4 gap-3`}>
-        <TouchableOpacity
-          style={tw`bg-[#2980b9] p-4 rounded-full`}
+        <Pressable
+          style={tw`bg-white rounded-xl p-4`}
           onPress={() => navigation.navigate('LeadershipStylesInfo')}
         >
-          <Text style={tw`text-white text-center font-bold text-lg`}>
+          <Text style={tw`text-blue-600 text-lg text-center font-semibold`}>
             Learn More About Leadership Styles
           </Text>
-        </TouchableOpacity>
+        </Pressable>
 
-        <TouchableOpacity
-          style={tw`bg-gray-200 p-4 rounded-full`}
+        <Pressable
+          style={tw`border border-white/30 rounded-xl p-4`}
           onPress={() => navigation.navigate('QuizScreen')}
         >
-          <Text style={tw`text-gray-800 text-center font-bold text-lg`}>
+          <Text style={tw`text-white text-lg text-center font-semibold`}>
             Retake Quiz
           </Text>
-        </TouchableOpacity>
+        </Pressable>
       </View>
-    </View>
+    </LinearGradient>
   );
 };
 

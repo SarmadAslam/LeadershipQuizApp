@@ -1,21 +1,27 @@
-import { Alert, View, Text, TextInput, Pressable } from 'react-native';
+import { View, Text, TextInput, Pressable, Alert, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native';
 import React, { useState } from 'react';
-import { my_auth } from '../API/signup';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { LinearGradient } from 'expo-linear-gradient';
+import { MaterialIcons } from '@expo/vector-icons';
 import tw from 'twrnc';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { collection, doc, setDoc } from 'firebase/firestore';
+import { db, my_auth } from '../API/signup';
 
 const SignUp = ({ navigation }) => {
   const [formData, setFormData] = useState({
-    name: '',
+    fullName: '',
     email: '',
     password: '',
     confirmPassword: ''
   });
   const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.name) newErrors.name = 'Name is required';
+    if (!formData.fullName || formData.fullName.length < 2) {
+      newErrors.fullName = 'Full name is required';
+    }
     if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Valid email is required';
     }
@@ -31,109 +37,174 @@ const SignUp = ({ navigation }) => {
 
   const handleSignUp = async () => {
     if (validateForm()) {
+      setIsLoading(true);
       try {
-        const response = await createUserWithEmailAndPassword(
+        const userCredential = await createUserWithEmailAndPassword(
           my_auth,
           formData.email,
           formData.password
         );
-        const uid = response.user.uid;
+  
+        const userDoc = doc(collection(db, "users"), userCredential.user.uid);
+        await setDoc(userDoc, {
+          fullName: formData.fullName,
+          email: formData.email,
+          createdAt: new Date().toISOString(),
+        });
+        
+        setIsLoading(false);
+        
         Alert.alert(
           "Registration Successful",
-          "Choose your next step",
+          "Your account has been created successfully!",
           [
             {
               text: "Go to Login",
-              onPress: () => navigation.navigate('Login', { userId: uid })
+              onPress: () => navigation.replace('Login'),
+              style: "default"
             },
             {
               text: "Back to Start",
-              onPress: () => navigation.navigate('Splash')
+              onPress: () => navigation.replace('Splash'),
+              style: "cancel"
             }
           ]
         );
+  
       } catch (error) {
-        Alert.alert("Sign Up Failed", error.message);
+        setIsLoading(false);
+        Alert.alert(
+          'Sign Up Failed',
+          error.code === 'auth/email-already-in-use'
+            ? 'An account with this email already exists'
+            : 'Failed to create account. Please try again.'
+        );
       }
     }
   };
 
   return (
-    <View style={tw`flex-1 bg-gray-50 p-6 justify-center`}>
-      <Text style={tw`text-3xl font-bold text-gray-800 mb-8 text-center`}>
-        Create Account
-      </Text>
-
-      <View style={tw`gap-4`}>
-        <View>
-          <TextInput
-            placeholder="Full Name"
-            value={formData.name}
-            onChangeText={(text) => setFormData({...formData, name: text})}
-            style={tw`bg-white p-4 rounded-lg border border-gray-300`}
-          />
-          {errors.name && (
-            <Text style={tw`text-red-500 text-sm mt-1`}>{errors.name}</Text>
-          )}
-        </View>
-
-        <View>
-          <TextInput
-            placeholder="Email"
-            value={formData.email}
-            onChangeText={(text) => setFormData({...formData, email: text})}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            style={tw`bg-white p-4 rounded-lg border border-gray-300`}
-          />
-          {errors.email && (
-            <Text style={tw`text-red-500 text-sm mt-1`}>{errors.email}</Text>
-          )}
-        </View>
-
-        <View>
-          <TextInput
-            placeholder="Password"
-            value={formData.password}
-            onChangeText={(text) => setFormData({...formData, password: text})}
-            secureTextEntry
-            style={tw`bg-white p-4 rounded-lg border border-gray-300`}
-          />
-          {errors.password && (
-            <Text style={tw`text-red-500 text-sm mt-1`}>{errors.password}</Text>
-          )}
-        </View>
-
-        <View>
-          <TextInput
-            placeholder="Confirm Password"
-            value={formData.confirmPassword}
-            onChangeText={(text) => setFormData({...formData, confirmPassword: text})}
-            secureTextEntry
-            style={tw`bg-white p-4 rounded-lg border border-gray-300`}
-          />
-          {errors.confirmPassword && (
-            <Text style={tw`text-red-500 text-sm mt-1`}>{errors.confirmPassword}</Text>
-          )}
-        </View>
-
-        <Pressable
-          onPress={handleSignUp}
-          style={tw`bg-[#2980b9] p-4 rounded-lg mt-4`}
-        >
-          <Text style={tw`text-white text-lg text-center font-semibold`}>
-            Sign Up
-          </Text>
-        </Pressable>
-
-        <View style={tw`flex-row justify-center items-center mt-4`}>
-          <Text style={tw`text-gray-600`}>Already have an account? </Text>
-          <Pressable onPress={() => navigation.navigate('Login')}>
-            <Text style={tw`text-[#2980b9] font-semibold`}>Log In</Text>
+    <LinearGradient
+      colors={['#1a365d', '#2563eb', '#3b82f6']}
+      style={tw`flex-1`}
+    >
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={tw`flex-1`}
+      >
+        <View style={tw`flex-1 px-6 pt-12 pb-8`}>
+          {/* Back Button */}
+          <Pressable 
+            onPress={() => navigation.goBack()}
+            style={tw`absolute top-12 left-6 z-10 flex-row items-center`}
+          >
+            <MaterialIcons name="arrow-back" size={24} color="white" />
+            <Text style={tw`text-white ml-1`}>Back</Text>
           </Pressable>
+
+          {/* Header Section */}
+          <View style={tw`items-center mb-8 mt-8`}>
+            <Text style={tw`text-4xl font-bold text-white mb-2`}>Create Account</Text>
+            <Text style={tw`text-lg text-white/80 text-center`}>
+              Join our community of leaders
+            </Text>
+          </View>
+
+          {/* Sign Up Form */}
+          <View style={tw`bg-white/10 rounded-3xl p-6 mb-6`}>
+            <View style={tw`mb-4`}>
+              <View style={tw`flex-row items-center bg-white/20 rounded-xl px-4 mb-1`}>
+                <MaterialIcons name="person" size={20} color="white" />
+                <TextInput
+                  placeholder="Full Name"
+                  placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                  value={formData.fullName}
+                  onChangeText={(text) => setFormData({...formData, fullName: text})}
+                  style={tw`flex-1 p-4 text-white`}
+                />
+              </View>
+              {errors.fullName && (
+                <Text style={tw`text-red-300 text-sm ml-2`}>{errors.fullName}</Text>
+              )}
+            </View>
+
+            <View style={tw`mb-4`}>
+              <View style={tw`flex-row items-center bg-white/20 rounded-xl px-4 mb-1`}>
+                <MaterialIcons name="email" size={20} color="white" />
+                <TextInput
+                  placeholder="Email"
+                  placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                  value={formData.email}
+                  onChangeText={(text) => setFormData({...formData, email: text})}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  style={tw`flex-1 p-4 text-white`}
+                />
+              </View>
+              {errors.email && (
+                <Text style={tw`text-red-300 text-sm ml-2`}>{errors.email}</Text>
+              )}
+            </View>
+
+            <View style={tw`mb-4`}>
+              <View style={tw`flex-row items-center bg-white/20 rounded-xl px-4 mb-1`}>
+                <MaterialIcons name="lock" size={20} color="white" />
+                <TextInput
+                  placeholder="Password"
+                  placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                  value={formData.password}
+                  onChangeText={(text) => setFormData({...formData, password: text})}
+                  secureTextEntry
+                  style={tw`flex-1 p-4 text-white`}
+                />
+              </View>
+              {errors.password && (
+                <Text style={tw`text-red-300 text-sm ml-2`}>{errors.password}</Text>
+              )}
+            </View>
+
+            <View style={tw`mb-6`}>
+              <View style={tw`flex-row items-center bg-white/20 rounded-xl px-4 mb-1`}>
+                <MaterialIcons name="lock" size={20} color="white" />
+                <TextInput
+                  placeholder="Confirm Password"
+                  placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                  value={formData.confirmPassword}
+                  onChangeText={(text) => setFormData({...formData, confirmPassword: text})}
+                  secureTextEntry
+                  style={tw`flex-1 p-4 text-white`}
+                />
+              </View>
+              {errors.confirmPassword && (
+                <Text style={tw`text-red-300 text-sm ml-2`}>{errors.confirmPassword}</Text>
+              )}
+            </View>
+
+            <Pressable
+              onPress={handleSignUp}
+              style={tw`bg-white rounded-xl p-4`}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator color="#2563eb" />
+              ) : (
+                <Text style={tw`text-blue-600 text-lg text-center font-semibold`}>
+                  Sign Up
+                </Text>
+              )}
+            </Pressable>
+          </View>
+
+          {/* Login Link */}
+          <View style={tw`flex-row justify-center items-center`}>
+            <Text style={tw`text-white/80`}>Already have an account? </Text>
+            <Pressable onPress={() => navigation.navigate('Login')}>
+              <Text style={tw`text-white font-semibold`}>Log In</Text>
+            </Pressable>
+          </View>
         </View>
-      </View>
-    </View>
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 };
 
